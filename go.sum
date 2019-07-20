@@ -1,0 +1,4 @@
+github.com/joeshaw/envdecode v0.0.0-20190604014844-d6d9849fcc2c h1:Z7RM1P7EAxnD1w40nHzHiW0uSpQmhAaUwyoUB6jqn+A=
+github.com/joeshaw/envdecode v0.0.0-20190604014844-d6d9849fcc2c/go.mod h1:MEQrHur0g8VplbLOv5vXmDzacSaH9Z7XhcgsSh1xciU=
+github.com/subosito/gotenv v1.1.1 h1:TWxckSF6WVKWbo2M3tMqCtWa9NFUgqM1SSynxmYONOI=
+github.com/subosito/gotenv v1.1.1/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
