@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/faris-arifiansyah/fws-rsvp/repository"
+	"github.com/faris-arifiansyah/fws-rsvp/usecase"
 	"github.com/faris-arifiansyah/mgoi"
 	"github.com/joeshaw/envdecode"
 	"github.com/subosito/gotenv"
@@ -72,6 +74,11 @@ func RunServer() {
 	db, err := NewMongoDB(cfg)
 	check(err)
 
-	fmt.Println("DB : ", db)
+	rsvpRepo := repository.NewMongoRsvp(db)
+	uc := usecase.NewRsvpUsecase(&usecase.AccessProvider{
+		RsvpRepo: rsvpRepo,
+	})
+
+	fmt.Println("UC : ", uc)
 	//TODO Listen & Serve
 }
