@@ -1,6 +1,10 @@
 package config
 
 import (
+	"fmt"
+	"time"
+
+	"github.com/faris-arifiansyah/mgoi"
 	"github.com/joeshaw/envdecode"
 	"github.com/subosito/gotenv"
 )
@@ -36,6 +40,38 @@ func check(e error) {
 	}
 }
 
+func NewMongoDB(cfg *Config) (mgoi.DatabaseManager, error) {
+	if cfg.Env == "test" {
+		return &mgoi.Database{}, nil
+	}
+
+	fmt.Printf("Connecting to mongodb://[USERNAME]:[PASSWORD]@%s/%s --authenticationDatabase\n", cfg.Database.Host, cfg.Database.Name)
+
+	dialInfo := &mgoi.DialInfo{
+		Addrs:    []string{cfg.Database.Host},
+		Username: cfg.Database.Username,
+		Password: cfg.Database.Password,
+		Timeout:  2 * time.Second,
+	}
+
+	dialer := mgoi.NewDialer()
+	session, err := dialer.DialWithInfo(dialInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	db := session.DB(cfg.Database.Name)
+
+	return db, nil
+}
+
 func RunServer() {
+	cfg := NewConfig()
+
+	//dependencies
+	db, err := NewMongoDB(cfg)
+	check(err)
+
+	fmt.Println("DB : ", db)
 	//TODO Listen & Serve
 }
