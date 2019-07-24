@@ -3,6 +3,8 @@ package rsvp
 import (
 	"context"
 	"time"
+
+	"github.com/globalsign/mgo/bson"
 )
 
 // Parameter is a struct to simplify passing parameter into function
@@ -19,12 +21,12 @@ type RsvpResult struct {
 
 // Rsvp Entity
 type Rsvp struct {
-	ID        string    `json:"-" bson:"_id,omitempty"`
-	Name      string    `json:"name" bson:"name"`
-	Address   string    `json:"address" bson:"address"`
-	Attend    uint8     `json:"attend" bson:"attend"`
-	Message   string    `json:"message" bson:"message"`
-	CreatedAt time.Time `json:"created_at" bson:"created_at"`
+	ID        bson.ObjectId `json:"-" bson:"_id,omitempty"`
+	Name      string        `json:"name" bson:"name"`
+	Address   string        `json:"address" bson:"address"`
+	Attend    uint8         `json:"attend" bson:"attend"`
+	Message   string        `json:"message" bson:"message"`
+	CreatedAt time.Time     `json:"created_at" bson:"created_at"`
 }
 
 // RsvpRepo provides data interchange between
