@@ -2,8 +2,12 @@ package config
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"time"
 
+	"github.com/faris-arifiansyah/fws-rsvp/delivery"
+	"github.com/faris-arifiansyah/fws-rsvp/handler"
 	"github.com/faris-arifiansyah/fws-rsvp/repository"
 	"github.com/faris-arifiansyah/fws-rsvp/usecase"
 	"github.com/faris-arifiansyah/mgoi"
@@ -79,6 +83,19 @@ func RunServer() {
 		RsvpRepo: rsvpRepo,
 	})
 
-	fmt.Println("UC : ", uc)
-	//TODO Listen & Serve
+	rsvpHandler := delivery.NewRsvpHandler(uc)
+	h, err := handler.NewHandler(&rsvpHandler)
+	check(err)
+
+	s := &http.Server{
+		Addr:         fmt.Sprintf(":%d", cfg.Port),
+		Handler:      h,
+		ReadTimeout:  310 * time.Second,
+		WriteTimeout: 310 * time.Second,
+	}
+
+	log.Printf("RSVP is available at %s\n", s.Addr)
+	if serr := s.ListenAndServe(); serr != http.ErrServerClosed {
+		log.Fatal(serr)
+	}
 }

@@ -19,7 +19,7 @@ func NewRsvpUsecase(pvd *AccessProvider) rsvp.Usecase {
 	return &rsvpUsecase{pvd}
 }
 
-func (ru *rsvpUsecase) CreateRsvp(ctx context.Context, rp *rsvp.Rsvp) error {
+func (ru *rsvpUsecase) CreateRsvp(ctx context.Context, rp rsvp.Rsvp) (rsvp.Rsvp, error) {
 	return ru.RsvpRepo.CreateRsvp(ctx, rp)
 }
 

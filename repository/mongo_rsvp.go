@@ -20,11 +20,11 @@ func NewMongoRsvp(db mgoi.DatabaseManager) rsvp.RsvpRepo {
 	return &mongoRsvp{db}
 }
 
-func (mr *mongoRsvp) CreateRsvp(ctx context.Context, rp *rsvp.Rsvp) error {
+func (mr *mongoRsvp) CreateRsvp(ctx context.Context, rp rsvp.Rsvp) (rsvp.Rsvp, error) {
 	rp.ID = bson.NewObjectId()
 	rp.CreatedAt = time.Now()
 
-	return mr.db.C("rsvps").Insert(rp)
+	return rp, mr.db.C("rsvps").Insert(rp)
 }
 
 func (mr *mongoRsvp) GetRsvps(ctx context.Context, p *rsvp.Parameter) (*rsvp.RsvpResult, error) {

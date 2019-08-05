@@ -32,11 +32,11 @@ type Rsvp struct {
 // RsvpRepo provides data interchange between
 // application and data provider.
 type RsvpRepo interface {
-	CreateRsvp(ctx context.Context, rp *Rsvp) error
+	CreateRsvp(ctx context.Context, rp Rsvp) (Rsvp, error)
 	GetRsvps(ctx context.Context, p *Parameter) (*RsvpResult, error)
 }
 
 type Usecase interface {
-	CreateRsvp(ctx context.Context, rp *Rsvp) error
+	CreateRsvp(ctx context.Context, rp Rsvp) (Rsvp, error)
 	GetRsvps(ctx context.Context, p *Parameter) (*RsvpResult, error)
 }
