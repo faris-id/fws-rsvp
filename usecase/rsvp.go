@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"strings"
 
 	rsvp "github.com/faris-arifiansyah/fws-rsvp"
 )
@@ -24,5 +25,22 @@ func (ru *rsvpUsecase) CreateRsvp(ctx context.Context, rp rsvp.Rsvp) (rsvp.Rsvp,
 }
 
 func (ru *rsvpUsecase) GetRsvps(ctx context.Context, p *rsvp.Parameter) (*rsvp.RsvpResult, error) {
+	p.Sort = ru.GetValidSortField(p.Sort)
+
 	return ru.RsvpRepo.GetRsvps(ctx, p)
+}
+
+func (ru *rsvpUsecase) GetValidSortField(sf string) string {
+	sortFields := map[string]struct{}{
+		"created_at":  {},
+		"-created_at": {},
+		"name":        {},
+		"-name":       {},
+	}
+
+	if _, valid := sortFields[strings.ToLower(sf)]; valid {
+		return sf
+	}
+
+	return "-created_at"
 }

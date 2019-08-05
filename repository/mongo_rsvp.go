@@ -31,7 +31,7 @@ func (mr *mongoRsvp) GetRsvps(ctx context.Context, p *rsvp.Parameter) (*rsvp.Rsv
 	var rsvpResult rsvp.RsvpResult
 
 	query := mr.db.C("rsvps").Find(nil)
-	query.Sort("-created_at")
+	query.Sort(p.Sort)
 
 	if p.Limit != constants.NoLimit {
 		query.Skip(p.Offset)

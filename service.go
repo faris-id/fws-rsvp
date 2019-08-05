@@ -9,6 +9,7 @@ import (
 
 // Parameter is a struct to simplify passing parameter into function
 type Parameter struct {
+	Sort   string
 	Limit  int
 	Offset int
 }

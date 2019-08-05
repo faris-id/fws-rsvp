@@ -62,6 +62,7 @@ func (h *RsvpHandler) RetrieveAllRsvp(w http.ResponseWriter, r *http.Request, _ 
 
 	qh := request.NewQueryHelper(r)
 	p := rsvp.Parameter{
+		Sort:   qh.GetString("sort", ""),
 		Limit:  qh.GetInt("limit", 10),
 		Offset: qh.GetInt("offset", 0),
 	}
@@ -78,7 +79,7 @@ func (h *RsvpHandler) RetrieveAllRsvp(w http.ResponseWriter, r *http.Request, _ 
 		Limit:      p.Limit,
 		Offset:     p.Offset,
 		Total:      rsvpResult.Total,
-		Sort:       "-created_at",
+		Sort:       p.Sort,
 	}
 	response.Write(w, response.BuildSuccess(rsvpResult.Data, m), http.StatusOK)
 }
