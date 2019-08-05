@@ -46,17 +46,24 @@ type CustomError struct {
 }
 
 var (
-	// DefaultError represents Invalid token error
+	// DefaultError represents Unexpected Internal Server error
 	DefaultError = CustomError{
-		Message:  "Terjadi Kesalahan Server, silakan coba beberapa menit kemudian",
+		Message:  "Internal Server Error. Please try again in a few minuts",
 		Code:     9001,
 		HTTPCode: http.StatusInternalServerError,
 	}
 
-	// BadRequestError represents Invalid token error
-	BadRequestError = CustomError{
-		Message:  "Data Input Tidak Valid",
+	// UserUnauthorizedError represents User unauthorized error
+	UserUnauthorizedError = CustomError{
+		Message:  "You can't access this page",
 		Code:     9002,
+		HTTPCode: http.StatusForbidden,
+	}
+
+	// BadRequestError represents invalid request body or parameter error
+	BadRequestError = CustomError{
+		Message:  "Request Body or Parameter is not valid",
+		Code:     9003,
 		HTTPCode: http.StatusBadRequest,
 	}
 )
