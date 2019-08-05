@@ -7,6 +7,7 @@ import (
 
 	rsvp "github.com/faris-arifiansyah/fws-rsvp"
 	"github.com/faris-arifiansyah/fws-rsvp/handler"
+	"github.com/faris-arifiansyah/fws-rsvp/request"
 	"github.com/faris-arifiansyah/fws-rsvp/response"
 	"github.com/julienschmidt/httprouter"
 )
@@ -57,4 +58,27 @@ func (h *RsvpHandler) CreateRsvp(w http.ResponseWriter, r *http.Request, _ httpr
 }
 
 func (h *RsvpHandler) RetrieveAllRsvp(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	ctx := r.Context()
+
+	qh := request.NewQueryHelper(r)
+	p := rsvp.Parameter{
+		Limit:  qh.GetInt("limit", 10),
+		Offset: qh.GetInt("offset", 0),
+	}
+
+	rsvpResult, err := h.uc.GetRsvps(ctx, &p)
+	if err != nil {
+		errBody, httpStatus := response.BuildErrorAndStatus(err, "")
+		response.Write(w, errBody, httpStatus)
+		return
+	}
+
+	m := response.MetaInfo{
+		HTTPStatus: http.StatusOK,
+		Limit:      p.Limit,
+		Offset:     p.Offset,
+		Total:      rsvpResult.Total,
+		Sort:       "-created_at",
+	}
+	response.Write(w, response.BuildSuccess(rsvpResult.Data, m), http.StatusOK)
 }

@@ -28,17 +28,23 @@ func (mr *mongoRsvp) CreateRsvp(ctx context.Context, rp rsvp.Rsvp) (rsvp.Rsvp, e
 }
 
 func (mr *mongoRsvp) GetRsvps(ctx context.Context, p *rsvp.Parameter) (*rsvp.RsvpResult, error) {
-	var rsvpResult *rsvp.RsvpResult
+	var rsvpResult rsvp.RsvpResult
 
 	query := mr.db.C("rsvps").Find(nil)
+	query.Sort("-created_at")
 
 	if p.Limit != constants.NoLimit {
 		query.Skip(p.Offset)
 		query.Limit(p.Limit)
 	}
 
-	err := query.All(rsvpResult.Data)
-	rsvpResult.Total = int64(len(rsvpResult.Data))
+	total, err := query.Count()
+	if err != nil {
+		return nil, err
+	}
 
-	return rsvpResult, err
+	err = query.All(&rsvpResult.Data)
+	rsvpResult.Total = int64(total)
+
+	return &rsvpResult, err
 }
