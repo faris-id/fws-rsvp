@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/faris-arifiansyah/fws-rsvp/response"
 	"github.com/julienschmidt/httprouter"
@@ -49,6 +50,23 @@ func NewHandler(registrations ...Registration) (http.Handler, error) {
 
 func WithAuth(h func(http.ResponseWriter, *http.Request, httprouter.Params), authType AuthType) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+		if authType == Admin {
+			headerUsername, headerPass, ok := r.BasicAuth()
+
+			if !ok {
+				response.Write(w, response.BuildError([]error{response.UserUnauthorizedError}), response.UserUnauthorizedError.HTTPCode)
+				return
+			}
+
+			username := os.Getenv("FWS_RSVP_USERNAME")
+			pass := os.Getenv("FWS_RSVP_PASSWORD")
+
+			if username != headerUsername || pass != headerPass {
+				response.Write(w, response.BuildError([]error{response.UserUnauthorizedError}), response.UserUnauthorizedError.HTTPCode)
+				return
+			}
+		}
+
 		h(w, r, params)
 	}
 }
