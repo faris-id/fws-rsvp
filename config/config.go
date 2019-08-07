@@ -11,13 +11,14 @@ import (
 	"github.com/faris-arifiansyah/fws-rsvp/repository"
 	"github.com/faris-arifiansyah/fws-rsvp/usecase"
 	"github.com/faris-arifiansyah/mgoi"
+	"github.com/go-redis/redis"
 	"github.com/joeshaw/envdecode"
 	"github.com/subosito/gotenv"
 )
 
 type Config struct {
 	Env  string `env:"ENV"`
-	Port uint16 `env:"PORT,default=8081"`
+	Port uint16 `env:"PORT,default=8082"`
 
 	Database struct {
 		Host     string `env:"DATABASE_HOST,default=localhost"`
@@ -30,6 +31,14 @@ type Config struct {
 	Redis struct {
 		Address string `env:"REDIS_HOST,required"`
 	}
+}
+
+type RedisOption struct {
+	Address      string
+	PingTimeout  time.Duration
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	MaxRetries   int
 }
 
 func NewConfig() *Config {
@@ -71,6 +80,19 @@ func NewMongoDB(cfg *Config) (mgoi.DatabaseManager, error) {
 	return db, nil
 }
 
+func NewRedis(opt RedisOption) (*redis.Client, error) {
+	client := redis.NewClient(&redis.Options{
+		Addr:         opt.Address,
+		DialTimeout:  opt.PingTimeout,
+		ReadTimeout:  opt.ReadTimeout,
+		WriteTimeout: opt.WriteTimeout,
+	})
+
+	_, err := client.Ping().Result()
+
+	return client, err
+}
+
 func RunServer() {
 	cfg := NewConfig()
 
@@ -78,12 +100,23 @@ func RunServer() {
 	db, err := NewMongoDB(cfg)
 	check(err)
 
+	redisOpt := RedisOption{
+		Address:      cfg.Redis.Address,
+		PingTimeout:  time.Duration(1 * time.Second),
+		ReadTimeout:  time.Duration(1 * time.Second),
+		WriteTimeout: time.Duration(1 * time.Second),
+		MaxRetries:   3,
+	}
+
+	redis, err := NewRedis(redisOpt)
+	check(err)
+
 	rsvpRepo := repository.NewMongoRsvp(db)
 	uc := usecase.NewRsvpUsecase(&usecase.AccessProvider{
 		RsvpRepo: rsvpRepo,
 	})
 
-	rsvpHandler := delivery.NewRsvpHandler(uc)
+	rsvpHandler := delivery.NewRsvpHandler(uc, redis)
 	h, err := handler.NewHandler(&rsvpHandler)
 	check(err)
 

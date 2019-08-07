@@ -66,6 +66,13 @@ var (
 		Code:     9003,
 		HTTPCode: http.StatusBadRequest,
 	}
+
+	// RateLimitExceededError represents rate limit exceeded error
+	RateLimitExceededError = CustomError{
+		Message:  "Too Many Request",
+		Code:     9004,
+		HTTPCode: http.StatusTooManyRequests,
+	}
 )
 
 func (c CustomError) Error() string {
