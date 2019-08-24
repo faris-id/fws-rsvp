@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/faris-arifiansyah/fws-rsvp/constants"
-
 	rsvp "github.com/faris-arifiansyah/fws-rsvp"
+	"github.com/faris-arifiansyah/fws-rsvp/constants"
 	"github.com/faris-arifiansyah/fws-rsvp/handler"
+	"github.com/faris-arifiansyah/fws-rsvp/middleware"
 	"github.com/faris-arifiansyah/fws-rsvp/request"
 	"github.com/faris-arifiansyah/fws-rsvp/response"
 	"github.com/go-redis/redis"
@@ -29,18 +29,18 @@ func NewRsvpHandler(uc rsvp.Usecase, rds *redis.Client) RsvpHandler {
 	}
 }
 
-func (h *RsvpHandler) Register(router *httprouter.Router) error {
+func (h *RsvpHandler) Register(router *httprouter.Router, ds []middleware.Decorator) error {
 	if router == nil {
 		return fmt.Errorf("router cannot be empty")
 	}
 
-	router.POST("/rsvps", handler.WithAuth(h.CreateRsvp, handler.Anonymous))
-	router.GET("/rsvps", handler.WithAuth(h.RetrieveAllRsvp, handler.Admin))
+	router.POST("/rsvps", handler.Decorate(handler.WithAuth(h.CreateRsvp, handler.Anonymous), ds...))
+	router.GET("/rsvps", handler.Decorate(handler.WithAuth(h.RetrieveAllRsvp, handler.Admin), ds...))
 
 	return nil
 }
 
-func (h *RsvpHandler) CreateRsvp(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *RsvpHandler) CreateRsvp(w http.ResponseWriter, r *http.Request, _ httprouter.Params) error {
 	var ctx = r.Context()
 	var rsvpRequest rsvp.Rsvp
 	var remoteAddr = r.RemoteAddr
@@ -50,7 +50,7 @@ func (h *RsvpHandler) CreateRsvp(w http.ResponseWriter, r *http.Request, _ httpr
 	if err = decoder.Decode(&rsvpRequest); err != nil {
 		errBody, httpStatus := response.BuildErrorAndStatus(err, "")
 		response.Write(w, errBody, httpStatus)
-		return
+		return err
 	}
 	defer r.Body.Close()
 
@@ -67,7 +67,7 @@ func (h *RsvpHandler) CreateRsvp(w http.ResponseWriter, r *http.Request, _ httpr
 	if err != nil {
 		errBody, httpStatus := response.BuildErrorAndStatus(err, "")
 		response.Write(w, errBody, httpStatus)
-		return
+		return err
 	}
 
 	//Create RSVP
@@ -75,14 +75,15 @@ func (h *RsvpHandler) CreateRsvp(w http.ResponseWriter, r *http.Request, _ httpr
 	if err != nil {
 		errBody, httpStatus := response.BuildErrorAndStatus(err, "")
 		response.Write(w, errBody, httpStatus)
-		return
+		return err
 	}
 
 	m := response.MetaInfo{HTTPStatus: http.StatusCreated}
 	response.Write(w, response.BuildSuccess(createdRsvp, m), http.StatusCreated)
+	return nil
 }
 
-func (h *RsvpHandler) RetrieveAllRsvp(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *RsvpHandler) RetrieveAllRsvp(w http.ResponseWriter, r *http.Request, _ httprouter.Params) error {
 	ctx := r.Context()
 
 	qh := request.NewQueryHelper(r)
@@ -96,7 +97,7 @@ func (h *RsvpHandler) RetrieveAllRsvp(w http.ResponseWriter, r *http.Request, _ 
 	if err != nil {
 		errBody, httpStatus := response.BuildErrorAndStatus(err, "")
 		response.Write(w, errBody, httpStatus)
-		return
+		return err
 	}
 
 	m := response.MetaInfo{
@@ -106,5 +107,7 @@ func (h *RsvpHandler) RetrieveAllRsvp(w http.ResponseWriter, r *http.Request, _ 
 		Total:      rsvpResult.Total,
 		Sort:       p.Sort,
 	}
+
 	response.Write(w, response.BuildSuccess(rsvpResult.Data, m), http.StatusOK)
+	return nil
 }

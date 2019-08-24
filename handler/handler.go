@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/faris-arifiansyah/fws-rsvp/middleware"
 	"github.com/faris-arifiansyah/fws-rsvp/response"
 	"github.com/julienschmidt/httprouter"
 )
@@ -18,7 +19,7 @@ const (
 )
 
 type Registration interface {
-	Register(r *httprouter.Router) error
+	Register(r *httprouter.Router, ds []middleware.Decorator) error
 }
 
 func Healthz(w http.ResponseWriter, _ *http.Request) {
@@ -38,9 +39,12 @@ func NewHandler(registrations ...Registration) (http.Handler, error) {
 
 	router.HandlerFunc("GET", "/healthz", Healthz)
 
+	// decorator for delivery
+	sd := middleware.StandardDecorators()
+
 	// start route
 	for _, reg := range registrations {
-		reg.Register(router)
+		reg.Register(router, sd)
 	}
 
 	router.NotFound = http.HandlerFunc(NotFound)
@@ -48,14 +52,14 @@ func NewHandler(registrations ...Registration) (http.Handler, error) {
 	return router, nil
 }
 
-func WithAuth(h func(http.ResponseWriter, *http.Request, httprouter.Params), authType AuthType) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func WithAuth(h func(http.ResponseWriter, *http.Request, httprouter.Params) error, authType AuthType) middleware.HandleWithError {
+	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) error {
 		if authType == Admin {
 			headerUsername, headerPass, ok := r.BasicAuth()
 
 			if !ok {
 				response.Write(w, response.BuildError([]error{response.UserUnauthorizedError}), response.UserUnauthorizedError.HTTPCode)
-				return
+				return response.UserUnauthorizedError
 			}
 
 			username := os.Getenv("FWS_RSVP_USERNAME")
@@ -63,10 +67,15 @@ func WithAuth(h func(http.ResponseWriter, *http.Request, httprouter.Params), aut
 
 			if username != headerUsername || pass != headerPass {
 				response.Write(w, response.BuildError([]error{response.UserUnauthorizedError}), response.UserUnauthorizedError.HTTPCode)
-				return
+				return response.UserUnauthorizedError
 			}
 		}
 
-		h(w, r, params)
+		return h(w, r, params)
 	}
+}
+
+// Decorate util to simplify combining middleware
+func Decorate(handle middleware.HandleWithError, ds ...middleware.Decorator) httprouter.Handle {
+	return middleware.HTTP(middleware.ApplyDecorators(handle, ds...))
 }
