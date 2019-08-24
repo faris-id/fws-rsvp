@@ -13,6 +13,7 @@ import (
 	"github.com/faris-arifiansyah/mgoi"
 	"github.com/go-redis/redis"
 	"github.com/joeshaw/envdecode"
+	"github.com/rs/cors"
 	"github.com/subosito/gotenv"
 )
 
@@ -120,9 +121,16 @@ func RunServer() {
 	h, err := handler.NewHandler(&rsvpHandler)
 	check(err)
 
+	co := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"GET", "POST", "PATCH", "DELETE", "PUT", "HEAD", "OPTIONS"},
+		AllowedHeaders: []string{"*"},
+		MaxAge:         86400,
+	})
+
 	s := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Port),
-		Handler:      h,
+		Handler:      co.Handler(h),
 		ReadTimeout:  310 * time.Second,
 		WriteTimeout: 310 * time.Second,
 	}
