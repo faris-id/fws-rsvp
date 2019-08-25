@@ -61,7 +61,6 @@ func WithLogging(logger *zap.Logger) Decorator {
 }
 
 // WithStandardContext decorates Decorator with standard context.
-// Standard context is explained in https://bukalapak.atlassian.net/wiki/spaces/INF/pages/119275619/RFC+Request+Context
 func WithStandardContext() Decorator {
 	return func(handle HandleWithError) HandleWithError {
 		return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) error {
