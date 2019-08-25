@@ -3,6 +3,7 @@ package delivery
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
@@ -55,13 +56,14 @@ func (h *RsvpHandler) CreateRsvp(w http.ResponseWriter, r *http.Request, _ httpr
 	defer r.Body.Close()
 
 	//Check Rate Limit
-	count, err := h.rds.Get(constants.RedisPrefix + remoteAddr).Int()
+	host, _, _ := net.SplitHostPort(remoteAddr)
+	count, err := h.rds.Get(constants.RedisPrefix + host).Int()
 	if count+1 > constants.RateLimit { //Rate Limit Exceeded
 		err = response.RateLimitExceededError
 	} else if count == 0 { //Set in Redis with Expire
-		err = h.rds.Set(constants.RedisPrefix+remoteAddr, 1, time.Duration(constants.RateLimitExp*time.Second)).Err()
+		err = h.rds.Set(constants.RedisPrefix+host, 1, time.Duration(constants.RateLimitExp*time.Second)).Err()
 	} else { //Increment Number of Requests
-		err = h.rds.Incr(constants.RedisPrefix + remoteAddr).Err()
+		err = h.rds.Incr(constants.RedisPrefix + host).Err()
 	}
 
 	if err != nil {
