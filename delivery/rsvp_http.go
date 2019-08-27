@@ -12,6 +12,7 @@ import (
 	"github.com/faris-arifiansyah/fws-rsvp/handler"
 	"github.com/faris-arifiansyah/fws-rsvp/middleware"
 	"github.com/faris-arifiansyah/fws-rsvp/request"
+	"github.com/faris-arifiansyah/fws-rsvp/request/validator"
 	"github.com/faris-arifiansyah/fws-rsvp/response"
 	"github.com/go-redis/redis"
 	"github.com/julienschmidt/httprouter"
@@ -55,6 +56,13 @@ func (h *RsvpHandler) CreateRsvp(w http.ResponseWriter, r *http.Request, _ httpr
 		return err
 	}
 	defer r.Body.Close()
+
+	errs := validator.Validate(rsvpRequest)
+	if len(errs) > 0 {
+		errBody := response.BuildErrors(errs)
+		response.Write(w, errBody, http.StatusBadRequest)
+		return err
+	}
 
 	//Check Rate Limit
 	host, _, _ := net.SplitHostPort(remoteAddr)

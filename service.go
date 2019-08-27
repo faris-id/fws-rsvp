@@ -24,8 +24,8 @@ type RsvpResult struct {
 // Rsvp Entity
 type Rsvp struct {
 	ID        bson.ObjectId              `json:"-" bson:"_id,omitempty"`
-	Name      string                     `json:"name" bson:"name"`
-	Address   string                     `json:"address" bson:"address"`
+	Name      string                     `json:"name,required" bson:"name"`
+	Address   string                     `json:"address,required" bson:"address"`
 	Attend    enumeration.AttendanceType `json:"attend" bson:"attend"`
 	Message   string                     `json:"message" bson:"message"`
 	CreatedAt time.Time                  `json:"created_at" bson:"created_at"`

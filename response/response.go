@@ -48,7 +48,7 @@ type CustomError struct {
 var (
 	// DefaultError represents Unexpected Internal Server error
 	DefaultError = CustomError{
-		Message:  "Internal Server Error. Please try again in a few minuts",
+		Message:  "Internal Server Error. Please try again in a few minutes",
 		Code:     9001,
 		HTTPCode: http.StatusInternalServerError,
 	}
@@ -62,7 +62,7 @@ var (
 
 	// BadRequestError represents invalid request body or parameter error
 	BadRequestError = CustomError{
-		Message:  "Request Body or Parameter is not valid",
+		Message:  "Request Body or Parameter is not Valid",
 		Code:     9003,
 		HTTPCode: http.StatusBadRequest,
 	}
