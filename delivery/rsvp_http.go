@@ -37,6 +37,7 @@ func (h *RsvpHandler) Register(router *httprouter.Router, ds []middleware.Decora
 
 	router.POST("/rsvps", handler.Decorate(handler.WithAuth(h.CreateRsvp, handler.Anonymous), ds...))
 	router.GET("/rsvps", handler.Decorate(handler.WithAuth(h.RetrieveAllRsvp, handler.Admin), ds...))
+	router.GET("/files/rsvps", handler.Decorate(handler.WithAuth(h.DownloadRsvpCsv, handler.Admin), ds...))
 
 	return nil
 }
@@ -111,5 +112,29 @@ func (h *RsvpHandler) RetrieveAllRsvp(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	response.Write(w, response.BuildSuccess(rsvpResult.Data, m), http.StatusOK)
+	return nil
+}
+
+func (h *RsvpHandler) DownloadRsvpCsv(w http.ResponseWriter, r *http.Request, _ httprouter.Params) error {
+	ctx := r.Context()
+
+	qh := request.NewQueryHelper(r)
+	p := rsvp.Parameter{
+		Sort:   qh.GetString("sort", ""),
+		Limit:  qh.GetInt("limit", 10),
+		Offset: qh.GetInt("offset", 0),
+	}
+
+	file, err := h.uc.WriteRsvpsCsv(ctx, &p)
+	if err != nil {
+		errBody, httpStatus := response.BuildErrorAndStatus(err, "")
+		response.Write(w, errBody, httpStatus)
+		return err
+	}
+
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, file.Name))
+	w.Header().Set("Content-Type", "text/csv")
+	w.Write(file.Content)
+
 	return nil
 }

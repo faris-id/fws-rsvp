@@ -1,8 +1,13 @@
 package usecase
 
 import (
+	"bytes"
 	"context"
+	"encoding/csv"
+	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	rsvp "github.com/faris-arifiansyah/fws-rsvp"
 )
@@ -28,6 +33,46 @@ func (ru *rsvpUsecase) GetRsvps(ctx context.Context, p *rsvp.Parameter) (*rsvp.R
 	p.Sort = ru.GetValidSortField(p.Sort)
 
 	return ru.RsvpRepo.GetRsvps(ctx, p)
+}
+
+func (ru *rsvpUsecase) WriteRsvpsCsv(ctx context.Context, p *rsvp.Parameter) (*rsvp.File, error) {
+	rsvpResult, err := ru.GetRsvps(ctx, p)
+	if err != nil {
+		return nil, err
+	}
+
+	file := new(rsvp.File)
+	buffer := &bytes.Buffer{}
+	writer := csv.NewWriter(buffer)
+
+	records := [][]string{}
+
+	//Set Header
+	records = append(records, []string{"Number", "Name", "Address", "Attend", "Message", "Created Date"})
+
+	for i, item := range rsvpResult.Data {
+		var record = []string{}
+		record = append(record, strconv.Itoa(i+1))
+		record = append(record, item.Name)
+		record = append(record, item.Address)
+		record = append(record, item.Attend.String())
+		record = append(record, item.Message)
+		record = append(record, item.CreatedAt.Format("2006-01-02 15-04-05"))
+
+		records = append(records, record)
+	}
+
+	if err := writer.WriteAll(records); err != nil {
+		return nil, err
+	}
+
+	timestamp := time.Now().Format("2006-01-02_15-04-05")
+	filename := fmt.Sprintf("rsvp-%s.csv", timestamp)
+
+	file.Content = buffer.Bytes()
+	file.Name = filename
+
+	return file, nil
 }
 
 func (ru *rsvpUsecase) GetValidSortField(sf string) string {
